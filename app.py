@@ -19,7 +19,7 @@ knowledge_text = load_knowledge()
 
 system_instruction = f"""
 You are a helpful customer support chatbot. 
-Answer user questions based on the provided knowledge base.
+Answer user questions based on the provided knowledge base below.
 
 --- KNOWLEDGE BASE ---
 {knowledge_text}
@@ -52,19 +52,30 @@ if prompt := st.chat_input("Ask a question..."):
         message_placeholder = st.empty()
         full_response = ""
 
-        # Send request
-        response = client.models.generate_content_stream(
-            model="gemini-3.5-flash",
-            contents=prompt,
-            config=config,
-        )
+        # Safely attempt to generate and stream content
+        try:
+            response = client.models.generate_content_stream(
+                model="gemini-3.5-flash",
+                contents=prompt,
+                config=config,
+            )
 
-        # Stream response directly to browser
-        for chunk in response:
-            full_response += chunk.text
-            message_placeholder.markdown(full_response + "▌")
-            
-        message_placeholder.markdown(full_response)
+            # Stream response directly to browser
+            for chunk in response:
+                if chunk.text:
+                    full_response += chunk.text
+                    message_placeholder.markdown(full_response + "▌")
+                
+            # If output was stopped/filtered before text generated
+            if not full_response:
+                full_response = "I was unable to process that specific request. Please try rephrasing your question."
+
+            message_placeholder.markdown(full_response)
+
+        except Exception as e:
+            # Friendly fallback message when API or network errors occur
+            full_response = "I am experiencing temporary connection issues. Please try sending your message again in a moment."
+            message_placeholder.markdown(full_response)
 
     # Save assistant message to history
     st.session_state.messages.append({"role": "assistant", "content": full_response})
