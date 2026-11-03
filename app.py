@@ -11,15 +11,21 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- UI Customization (Hide Standard Streamlit Chrome) ---
+# # UI Customization: Keep sidebar toggle button visible while hiding top menu & status
 st.markdown("""
     <style>
+    /* Hide the top-right hamburger menu and running status */
     #MainMenu {visibility: hidden;}
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
-    .stApp {
-        margin-top: -30px;
+    .stAppHeader {background: transparent;}
+    [data-testid="stHeader"] > div:nth-child(2) {visibility: hidden;}
+    
+    /* Ensure the sidebar toggle icon is always visible at the top left */
+    [data-testid="stSidebarCollapseButton"] {
+        visibility: visible !important;
+        display: block !important;
+        z-index: 999999;
     }
+    footer {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
 
