@@ -1,2 +1,6 @@
 google-genai
 streamlit
+gspread
+fastapi
+uvicorn
+websockets
