@@ -116,4 +116,15 @@ if prompt := st.chat_input("Ask a question..."):
 
     # Save assistant message to history
     st.session_state.messages.append({"role": "assistant", "content": full_response})
-   
+
+   import streamlit as st
+
+# Inject custom CSS to hide Streamlit header and internal menu
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            header {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
