@@ -10,5 +10,3 @@ Information brochure link: https://docs.google.com/document/d/1mKZMOis8YFA0KdMZL
 Contact: email = krishnakants211@gmail.com, phone number = 9839026174
 
 IMPORTANT: Never invent or assume missing workshop details.
---- END KNOWLEDGE BASE ---
-"""
