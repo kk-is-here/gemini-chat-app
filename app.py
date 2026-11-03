@@ -39,12 +39,20 @@ client = genai.Client(api_key=api_key)
 # --- Helper Functions ---
 @st.cache_data
 def load_knowledge():
-    """Reads the knowledge base file locally."""
+    """Fetches knowledge.txt directly from GitHub main branch."""
+    repo_name = st.secrets["REPO_NAME"]
+    url = f"https://raw.githubusercontent.com/{repo_name}/main/knowledge.txt"
     try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.text
+        else:
+            # Fallback to local file if fetch fails
+            with open("knowledge.txt", "r", encoding="utf-8") as f:
+                return f.read()
+    except Exception:
         with open("knowledge.txt", "r", encoding="utf-8") as f:
             return f.read()
-    except FileNotFoundError:
-        return "Knowledge base file not found."
 
 def update_github_knowledge(new_content: str):
     """Updates knowledge.txt directly in the GitHub repository via PyGithub."""
