@@ -11,6 +11,15 @@ st.title("🤖 Customer Support Assistant")
 api_key = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=api_key)
 
+# Hide Streamlit header and main menu
+st.markdown("""
+    <style>
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    </style>
+""", unsafe_allow_html=True)
+
 # Function to update GitHub repo (Defined at top-level)
 def update_github_knowledge(new_content: str):
     """Updates knowledge.txt directly in the GitHub repository."""
