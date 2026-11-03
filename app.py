@@ -1,13 +1,32 @@
 import streamlit as st
 from google import genai
 from google.genai import types
+from github import Github
 
-# Page Title
+# Page Configuration & Title
+st.set_page_config(page_title="Customer Support & Admin", layout="wide")
 st.title("🤖 Customer Support Assistant")
 
 # Fetch API key securely from Streamlit secrets
 api_key = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=api_key)
+
+# Function to update GitHub repo (Defined at top-level)
+def update_github_knowledge(new_content: str):
+    """Updates knowledge.txt directly in the GitHub repository."""
+    g = Github(st.secrets["GITHUB_TOKEN"])
+    repo = g.get_repo(st.secrets["REPO_NAME"])
+    
+    file_path = "knowledge.txt"
+    contents = repo.get_contents(file_path, ref="main")
+    
+    repo.update_file(
+        path=contents.path,
+        message="Update knowledge.txt via Streamlit Admin Panel",
+        content=new_content,
+        sha=contents.sha,
+        branch="main"
+    )
 
 # Read Knowledge Base
 @st.cache_data
@@ -18,7 +37,7 @@ def load_knowledge():
 knowledge_text = load_knowledge()
 
 system_instruction = f"""
-You are a helpful customer support chatbot. 
+You are a helpful customer support chatbot for IIT Guwahati School of Business. 
 Answer user questions based on the provided knowledge base below.
 
 --- KNOWLEDGE BASE ---
@@ -26,7 +45,30 @@ Answer user questions based on the provided knowledge base below.
 --- END KNOWLEDGE BASE ---
 """
 
-# Store chat history in web session
+# --- Admin Sidebar Section ---
+st.sidebar.title("⚙️ Admin Dashboard")
+if st.sidebar.checkbox("Manage Knowledge Base"):
+    st.sidebar.markdown("---")
+    st.header("📝 Knowledge Base Manager")
+    
+    # Read current local knowledge.txt
+    current_knowledge = load_knowledge()
+
+    updated_text = st.text_area(
+        "Edit Bot Knowledge Base (updates both Chatbot & Voice Bot):",
+        value=current_knowledge,
+        height=350
+    )
+
+    if st.button("Save & Deploy to GitHub"):
+        try:
+            update_github_knowledge(updated_text)
+            st.cache_data.clear()  # Clear cache so new text is loaded immediately
+            st.success("Successfully updated knowledge.txt on GitHub! Render & Streamlit will auto-redeploy.")
+        except Exception as e:
+            st.error(f"Failed to update GitHub: {e}")
+
+# --- Customer Support Chat Interface ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -42,7 +84,6 @@ if prompt := st.chat_input("Ask a question..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Generate response from Gemini
     config = types.GenerateContentConfig(
         system_instruction=system_instruction,
         temperature=0.3,
@@ -52,7 +93,6 @@ if prompt := st.chat_input("Ask a question..."):
         message_placeholder = st.empty()
         full_response = ""
 
-        # Safely attempt to generate and stream content
         try:
             response = client.models.generate_content_stream(
                 model="gemini-3.5-flash",
@@ -60,22 +100,33 @@ if prompt := st.chat_input("Ask a question..."):
                 config=config,
             )
 
-            # Stream response directly to browser
             for chunk in response:
                 if chunk.text:
                     full_response += chunk.text
                     message_placeholder.markdown(full_response + "▌")
                 
-            # If output was stopped/filtered before text generated
             if not full_response:
                 full_response = "I was unable to process that specific request. Please try rephrasing your question."
 
             message_placeholder.markdown(full_response)
 
         except Exception as e:
-            # Friendly fallback message when API or network errors occur
             full_response = "I am experiencing temporary connection issues. Please try sending your message again in a moment."
             message_placeholder.markdown(full_response)
 
     # Save assistant message to history
     st.session_state.messages.append({"role": "assistant", "content": full_response})
+    st.markdown("---")
+st.subheader("📞 Prefer to talk over voice?")
+
+# Replace with your actual live Render WebSocket URL
+RENDER_WS_URL = "wss://gemini-voice-server.onrender.com/ws/chat"
+
+# Read index.html and update the WebSocket URL dynamically
+with open("index.html", "r", encoding="utf-8") as f:
+    html_code = f.read()
+
+# Replace default local WS with live Render WS URL
+html_code = html_code.replace("ws://${window.location.host}/ws/chat", RENDER_WS_URL)
+
+st.components.v1.html(html_code, height=250)

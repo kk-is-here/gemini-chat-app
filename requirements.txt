@@ -4,3 +4,4 @@ gspread
 fastapi
 uvicorn
 websockets
+PyGithub
