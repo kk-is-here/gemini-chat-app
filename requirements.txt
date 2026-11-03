@@ -1,7 +1,4 @@
 google-genai
 streamlit
-gspread
-fastapi
-uvicorn
-websockets
 PyGithub
+requests
