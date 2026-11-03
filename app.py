@@ -116,17 +116,4 @@ if prompt := st.chat_input("Ask a question..."):
 
     # Save assistant message to history
     st.session_state.messages.append({"role": "assistant", "content": full_response})
-    st.markdown("---")
-st.subheader("📞 Prefer to talk over voice?")
-
-# Replace with your actual live Render WebSocket URL
-RENDER_WS_URL = "wss://gemini-voice-server.onrender.com/ws/chat"
-
-# Read index.html and update the WebSocket URL dynamically
-with open("index.html", "r", encoding="utf-8") as f:
-    html_code = f.read()
-
-# Replace default local WS with live Render WS URL
-html_code = html_code.replace("ws://${window.location.host}/ws/chat", RENDER_WS_URL)
-
-st.components.v1.html(html_code, height=250)
+   
